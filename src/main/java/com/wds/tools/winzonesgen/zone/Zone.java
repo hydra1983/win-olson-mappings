@@ -1,4 +1,4 @@
-package com.wds.tools.winzonesgen.domain;
+package com.wds.tools.winzonesgen.zone;
 
 public class Zone {
 

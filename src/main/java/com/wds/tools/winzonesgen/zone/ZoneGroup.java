@@ -1,4 +1,4 @@
-package com.wds.tools.winzonesgen.domain;
+package com.wds.tools.winzonesgen.zone;
 
 import java.util.List;
 import java.util.regex.Matcher;
@@ -15,13 +15,20 @@ public class ZoneGroup {
 	private ZoneGroup(String groupInfo) {
 		this.offset = parseOffset(groupInfo);
 		this.name = parseName(groupInfo);
-		System.out.println("------------------------------");
-		System.out.println(offset);
-		System.out.println(name);
 	}
 
 	private final Long offset;
+
+	public Long getOffset() {
+		return offset;
+	}
+
 	private final String name;
+
+	public String getName() {
+		return name;
+	}
+
 	private final List<Zone> zones = Lists.newArrayList();
 
 	public List<Zone> getZones() {
@@ -39,11 +46,11 @@ public class ZoneGroup {
 		if (m.find()) {
 			name = m.group(1);
 		}
-		
-		if(name != null){
+
+		if (name != null) {
 			name = name.trim();
 		}
-		
+
 		return name;
 	}
 
@@ -53,10 +60,10 @@ public class ZoneGroup {
 		Matcher m = p.matcher(groupInfo);
 		if (m.find()) {
 			String offsetValue = m.group(1);
-			if(offsetValue != null){
+			if (offsetValue != null) {
 				offsetValue = offsetValue.trim();
 			}
-			
+
 			if (!offsetValue.isEmpty()) {
 				String sign = offsetValue.substring(0, 1);
 				offsetValue = offsetValue.substring(1);
