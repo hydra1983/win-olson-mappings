@@ -4,9 +4,14 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.collect.Lists;
+import com.wds.tools.winzonesgen.utils.Strings;
 
 public class ZoneGroup {
+	private static final Logger LOG = LoggerFactory.getLogger(ZoneGroup.class);
 
 	public static ZoneGroup create(String groupInfo) {
 		return new ZoneGroup(groupInfo);
@@ -29,6 +34,12 @@ public class ZoneGroup {
 		return name;
 	}
 
+	private Zone firstZone;
+
+	public Zone getFirstZone() {
+		return firstZone;
+	}
+
 	private final List<Zone> zones = Lists.newArrayList();
 
 	public List<Zone> getZones() {
@@ -37,6 +48,18 @@ public class ZoneGroup {
 
 	public void add(Zone zone) {
 		zones.add(zone);
+		if (zone.getTerritory().equals(Zones.FIRST_ZONE)) {
+			if (this.firstZone == null) {
+				this.firstZone = zone;
+			} else {
+				if (LOG.isErrorEnabled()) {
+					LOG.error(Strings
+							.substitute(
+									"Group '{0}' can only have one first zone. The adding one is '{1}'",
+									getName(), zone.getType()));
+				}
+			}
+		}
 	}
 
 	private String parseName(String groupInfo) {

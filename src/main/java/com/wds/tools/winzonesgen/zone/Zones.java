@@ -9,6 +9,8 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
@@ -18,30 +20,47 @@ import org.xml.sax.SAXException;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.wds.tools.winzonesgen.utils.Strings;
 
 public class Zones {
-	private static final String ELEM_WINDOWS_ZONES = "windowsZones";
-	private static final String ELEM_MAP_TIME_ZONES = "mapTimezones";
-	private static final String ATTR_TYPE = "type";
-	private static final String ATTR_OTHER = "other";
-	private static final String ATTR_TERRITORY = "territory";
-	private static final String UNMAPPABLE = "Unmappable";
+	private static final Logger LOG = LoggerFactory.getLogger(Zones.class);
+
+	static final String ELEM_WINDOWS_ZONES = "windowsZones";
+	static final String ELEM_MAP_TIME_ZONES = "mapTimezones";
+	static final String ATTR_TYPE = "type";
+	static final String ATTR_OTHER = "other";
+	static final String ATTR_TERRITORY = "territory";
+	static final String UNMAPPABLE = "Unmappable";
+	static final String FIRST_ZONE = "001";
 
 	public static List<ZoneGroup> parse(File file) throws SAXException,
 			IOException, ParserConfigurationException {
-		List<ZoneGroup> zoneGroups = Lists.newArrayList();
+		return doParse(createDocBuilder().parse(file));
+	}
 
+	public static List<ZoneGroup> parse(String url) throws SAXException,
+			IOException, ParserConfigurationException {
+		return doParse(createDocBuilder().parse(url));
+	}
+
+	private static DocumentBuilder createDocBuilder()
+			throws ParserConfigurationException {
 		DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory
 				.newInstance();
 		docBuilderFactory.setIgnoringComments(false);
-		DocumentBuilder docBuilder = docBuilderFactory.newDocumentBuilder();
-		Document doc = docBuilder.parse(file);
+		return docBuilderFactory.newDocumentBuilder();
+	}
+
+	private static List<ZoneGroup> doParse(Document doc) {
+		List<ZoneGroup> zoneGroups = Lists.newArrayList();
 		Element root = doc.getDocumentElement();
 		NodeList rootNodes = root.getChildNodes();
 		NodeList windowsZonesNodes = findChildNodes(rootNodes,
 				ELEM_WINDOWS_ZONES);
 		NodeList mapTimezonesNodes = findChildNodes(windowsZonesNodes,
 				ELEM_MAP_TIME_ZONES);
+
+		List<String> unmappableNodeList = Lists.newArrayList();
 
 		if (mapTimezonesNodes != null) {
 			Map<String, List<Node>> nodeListMap = Maps.newHashMap();
@@ -58,11 +77,18 @@ public class Zones {
 						}
 
 						currentNodeList = nodeListMap.get(value);
+					} else if (nodeKeyList.size() > 1) {
+						unmappableNodeList.add(nodeKeyList.get(nodeKeyList
+								.size() - 1));
 					}
-
 				} else if (currentNodeList != null) {
 					currentNodeList.add(node);
 				}
+			}
+
+			for (String key : unmappableNodeList) {
+				nodeKeyList.remove(key);
+				nodeListMap.remove(key);
 			}
 
 			for (String key : nodeKeyList) {
@@ -73,11 +99,13 @@ public class Zones {
 				for (Node node : nodeList) {
 					NamedNodeMap attrs = node.getAttributes();
 					if (attrs != null) {
+						String value = null;
+						String other = null;
+						String territory = null;
+						String[] types = null;
+
 						for (int i = 0; i < attrs.getLength(); i++) {
 							Node attr = attrs.item(i);
-							String value = null;
-							String other = null;
-							String territory = null;
 							if (attr.getNodeName().equals(ATTR_TYPE)) {
 								value = attr.getNodeValue();
 							} else if (attr.getNodeName().equals(ATTR_OTHER)) {
@@ -88,20 +116,29 @@ public class Zones {
 							}
 
 							if (value != null && !value.isEmpty()) {
-								String[] types = value.split(" ");
-								for (String type : types) {
-									if (!type.isEmpty()) {
-										group.add(Zone.create(type, territory,
-												other));
-									}
-								}
+								types = value.split(" ");
 							}
 						}
+
+						if (types != null && types.length > 0) {
+							for (String type : types) {
+								if (!type.isEmpty()) {
+									group.add(Zone.create(type, territory,
+											other));
+								}
+							}
+						} else {
+							if (LOG.isErrorEnabled()) {
+								LOG.error(Strings.substitute(
+										"No type found for {0}",
+										node.toString()));
+							}
+						}
+
 					}
 				}
 			}
 		}
-
 		return zoneGroups;
 	}
 
