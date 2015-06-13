@@ -1,25 +1,22 @@
-package com.wds.tools.winzonesgen.zone;
+package com.wds.tools.winolson.zone;
+
+import static com.wds.tools.winolson.utils.Consts.DEFAULT_TERRITORY;
 
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.common.collect.Lists;
-import com.wds.tools.winzonesgen.utils.Strings;
+import com.wds.tools.winolson.utils.Strings;
 
-public class ZoneGroup {
-	private static final Logger LOG = LoggerFactory.getLogger(ZoneGroup.class);
-
-	public static ZoneGroup create(String groupInfo) {
-		return new ZoneGroup(groupInfo);
+public class WindowsZone {
+	public static WindowsZone create(String windowsZoneInfo) {
+		return new WindowsZone(windowsZoneInfo);
 	}
 
-	private ZoneGroup(String groupInfo) {
-		this.offset = parseOffset(groupInfo);
-		this.name = parseName(groupInfo);
+	private WindowsZone(String windowsZoneInfo) {
+		this.offset = parseOffset(windowsZoneInfo);
+		this.name = parseName(windowsZoneInfo);
 	}
 
 	private final Long offset;
@@ -30,34 +27,36 @@ public class ZoneGroup {
 
 	private final String name;
 
-	public String getName() {
+	public String getDisplayName() {
 		return name;
 	}
 
-	private Zone firstZone;
+	private OlsonZone defaultOlsonZone;
 
-	public Zone getFirstZone() {
-		return firstZone;
+	public OlsonZone getDefaultOlsonZone() {
+		return defaultOlsonZone;
 	}
 
-	private final List<Zone> zones = Lists.newArrayList();
+	private final List<OlsonZone> olsonZones = Lists.newArrayList();
 
-	public List<Zone> getZones() {
-		return zones;
+	public List<OlsonZone> getOlsonZones() {
+		return olsonZones;
 	}
 
-	public void add(Zone zone) {
-		zones.add(zone);
-		if (zone.getTerritory().equals(Zones.FIRST_ZONE)) {
-			if (this.firstZone == null) {
-				this.firstZone = zone;
+	public String getId() {
+		return getDefaultOlsonZone().getWindowsZoneId();
+	}
+
+	public void addOlsonZone(OlsonZone olsonZone) {
+		olsonZones.add(olsonZone);
+		if (olsonZone.getLocation().equals(DEFAULT_TERRITORY)) {
+			if (this.defaultOlsonZone == null) {
+				this.defaultOlsonZone = olsonZone;
 			} else {
-				if (LOG.isErrorEnabled()) {
-					LOG.error(Strings
-							.substitute(
-									"Group '{0}' can only have one first zone. The adding one is '{1}'",
-									getName(), zone.getType()));
-				}
+				throw new RuntimeException(
+						Strings.substitute(
+								"Windows zone '{0}' can only have one default olson zone. The adding one is '{1}'",
+								getDisplayName(), olsonZone.getId()));
 			}
 		}
 	}

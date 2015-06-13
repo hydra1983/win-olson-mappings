@@ -11,12 +11,12 @@
 	</parent>
 
 	<groupId>com.wds.tools</groupId>
-	<artifactId>windowszones-generator</artifactId>
+	<artifactId>win-olson-mapping</artifactId>
 	<version>0.1.0-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
-	<name>Windows Zones Generator</name>
-	<description>Windows Zones Generator Application</description>
+	<name>Windows Zones and Olson Zones Mappings</name>
+	<description>Windows Zones and Olson Zones Mappings</description>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

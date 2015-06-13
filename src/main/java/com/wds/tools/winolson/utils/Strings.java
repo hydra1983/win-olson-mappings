@@ -1,4 +1,4 @@
-package com.wds.tools.winzonesgen.utils;
+package com.wds.tools.winolson.utils;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Map;
